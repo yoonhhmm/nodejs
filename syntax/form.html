@@ -1,0 +1,20 @@
+<!-- 사용자로부터 정보를 입력받는 방법을 살펴볼거야-->
+
+
+<!-- 내가 갖고 있는 데이터를 form 으로 감싸서 어디로 보낼지 주소가 필요행 -->
+<form action="http://localhost:3000/create_process"
+    method = "post">
+    <!-- method를 post로 바꾸게 되면 제출된 정보가 가려진다(쿼리스트링안보임), 주소만 나온다 -->
+    <!-- 한 줄 입력 -->
+    <p><input type="text" name = "title"></p>
+
+    <!-- 여러 줄을 입력받을 수 있게 -->
+    <p>
+        <textarea name = "description"></textarea>
+    </p>
+
+    <!-- 입력이 완료되면 전송을 할 수 있게 전송버튼생성 -->
+    <p>
+        <input type="submit">
+    </p>
+</form>

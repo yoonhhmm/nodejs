@@ -1,8 +1,9 @@
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
-// 중복이 된 코드를 함수화 하여 가시성을 높인다
-// 내용의 구성이 바뀔 수 있으므로 ${body}로 바꿔주고 아래 변수 template = templateHTML(매개변수에 내용을 저장시켜주다)
+// post방식으로 전송된 데이터 받기 위해 불러온 모듈
+var qs = require('querystring')
+
 function templateHTML(title, list, body){
   return `
   <!doctype html>
@@ -14,6 +15,7 @@ function templateHTML(title, list, body){
   <body>
     <h1><a href="/">WEB</a></h1>
     ${list}
+    <a href = "/create">create</a>
     ${body}
   </body>
   </html>
@@ -36,6 +38,7 @@ var app = http.createServer(function (request, response) {
   var _url = request.url;
   var queryData = url.parse(_url, true).query;
   var pathname = url.parse(_url, true).pathname;
+  
   var title = queryData.id;
 
 
@@ -89,6 +92,47 @@ var app = http.createServer(function (request, response) {
       });
     }
 
+    // 생성하기 링크 만들기
+  } else if(pathname === "/create"){
+    fs.readdir('./data', function (err, filelist){
+      var title = 'Welcome!';
+      var description = 'Hello nodejs';
+      var list = templateList(filelist);
+      var template = templateHTML(title, list,
+       `
+       <form action="http://localhost:3000/create_process"
+       method = "post">
+       <p><input type="text" name = "title" placeholder = "title"></p>
+       <p>
+           <textarea name = "description" placeholder = "description"></textarea>
+       </p>
+       <p>
+           <input type="submit">
+       </p>
+   </form>
+   `);  
+      response.writeHead(200);
+      response.end(template);
+    });
+  } else if(pathname === '/create_process'){
+      var body = '';
+      // post방식으로 데이터를 전송할 때 데이터가 너무 많으면 무리가 간다
+      // -> 그걸 대비하여 아래와 같은 방법을 이용
+      request.on('data', function(data){
+        body = body + data;  // 서버쪽에서 수신할때마다 callback함수를 호출할때 마다 데이터라는 인자로 수신한 정보를 준다
+      });
+      // 수신이 끝났을 때 나올 수 있는 상태 만들어준다
+      request.on('end', function(){
+        var post = qs.parse(body);  
+        var title = post.title;
+        var description = post.description;
+        // file생성
+        fs.writeFile(`data/${title}`, description, 'utf8', function(err){
+          response.writeHead(302, {Location : `/?id=${title}`});  // 페이지를 다른 곳으로 redirectoin
+          response.end('success');
+        })
+      });
+      
   } else {
       response.writeHead(404);
       response.end('Not Found');
