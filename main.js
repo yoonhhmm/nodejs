@@ -3,38 +3,40 @@ var fs = require('fs');
 var url = require('url');
 var qs = require('querystring')
 
-// 객체를 만들어줘 = 코드를 조금 더 쉽게 만들어 줘 => 리팩토링!!
-var template = {
-  Html:function templateHTML(title, list, body, control) {
-    return `
-    <!doctype html>
-    <html>
-    <head>
-      <title>WEB1 - ${title}</title>
-      <meta charset="utf-8">
-    </head>
-    <body>
-      <h1><a href="/">WEB</a></h1>
-      ${list}
-      ${control}
-      ${body}
-    </body>
-    </html>
+//1. 객체를 만들어줘 = 코드를 조금 더 쉽게 만들어 줘 => 리팩토링!!
+//2. module을 만들어서 가져올거야
+var template = require('./lib/template.js');
+// var template = {
+//   Html:function templateHTML(title, list, body, control) {
+//     return `
+//     <!doctype html>
+//     <html>
+//     <head>
+//       <title>WEB1 - ${title}</title>
+//       <meta charset="utf-8">
+//     </head>
+//     <body>
+//       <h1><a href="/">WEB</a></h1>
+//       ${list}
+//       ${control}
+//       ${body}
+//     </body>
+//     </html>
     
-    `;
-  },
-  list:function templateList(filelist) {
-    var list = '<ul>';
-    var i = 0;
-    while (i < filelist.length) {
-      list = list + `<li><a href = "/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-      i = i + 1;
-    }
-    list = list + '</ul>';
+//     `;
+//   },
+//   list:function templateList(filelist) {
+//     var list = '<ul>';
+//     var i = 0;
+//     while (i < filelist.length) {
+//       list = list + `<li><a href = "/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+//       i = i + 1;
+//     }
+//     list = list + '</ul>';
   
-    return list;
-  }
-}
+//     return list;
+//   }
+// }
 
 // function templateHTML(title, list, body, control) {
 //   return `
