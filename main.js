@@ -2,72 +2,15 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring')
-
-//1. 객체를 만들어줘 = 코드를 조금 더 쉽게 만들어 줘 => 리팩토링!!
-//2. module을 만들어서 가져올거야
 var template = require('./lib/template.js');
-// var template = {
-//   Html:function templateHTML(title, list, body, control) {
-//     return `
-//     <!doctype html>
-//     <html>
-//     <head>
-//       <title>WEB1 - ${title}</title>
-//       <meta charset="utf-8">
-//     </head>
-//     <body>
-//       <h1><a href="/">WEB</a></h1>
-//       ${list}
-//       ${control}
-//       ${body}
-//     </body>
-//     </html>
-    
-//     `;
-//   },
-//   list:function templateList(filelist) {
-//     var list = '<ul>';
-//     var i = 0;
-//     while (i < filelist.length) {
-//       list = list + `<li><a href = "/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-//       i = i + 1;
-//     }
-//     list = list + '</ul>';
-  
-//     return list;
-//   }
-// }
+// 보안을 위해 경로에 대한 모듈을 가져온다
+var path = require('path');
+// 출력정보에 대한 보안
+var sanitizeHtml = require('sanitize-html');
 
-// function templateHTML(title, list, body, control) {
-//   return `
-//   <!doctype html>
-//   <html>
-//   <head>
-//     <title>WEB1 - ${title}</title>
-//     <meta charset="utf-8">
-//   </head>
-//   <body>
-//     <h1><a href="/">WEB</a></h1>
-//     ${list}
-//     ${control}
-//     ${body}
-//   </body>
-//   </html>
-  
-//   `;
-// }
 
-// function templateList(filelist) {
-//   var list = '<ul>';
-//   var i = 0;
-//   while (i < filelist.length) {
-//     list = list + `<li><a href = "/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-//     i = i + 1;
-//   }
-//   list = list + '</ul>';
-
-//   return list;
-// }
+// http.createServer([requestLister]) 로 웹서버를 만든거야
+// 요청이 들어올때마다 파라미터값에 따라 응답값을 줘
 var app = http.createServer(function (request, response) {
   var _url = request.url;
   var queryData = url.parse(_url, true).query;
@@ -81,7 +24,6 @@ var app = http.createServer(function (request, response) {
       fs.readdir('./data', function (err, filelist) {
         var title = 'Welcome!';
         var description = 'Hello nodejs';
-        // 객체를 이용하여 호출
         var list = template.list(filelist);
         var html = template.Html(title, list,
           `<h2>${title}</h2>${description}`,
@@ -91,14 +33,16 @@ var app = http.createServer(function (request, response) {
         response.end(html);
       })
 
-      // 이외 화면 - create, update, delete(form type으로)
+      
     } else {
       fs.readdir('./data', function (err, filelist) {
-        var title = 'Welcome!';
-        var description = 'Hello nodejs';
-        var list = template.list(filelist);
-        fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+        // 외부에서 들어온 정보를 걸려줄거야
+        var filteredId = path.parse(queryData.id).base;
+        fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
           var title = queryData.id;
+          var sanitizeTitle = sanitizeHtml(title);
+          var sanitizeDescription = sanitizeHtml(description);
+          var list = template.list(filelist);
           var html = template.Html(title, list,
             `<h2>${title}</h2>${description}`,
             `<a href = "/create">create</a> 
@@ -162,7 +106,8 @@ var app = http.createServer(function (request, response) {
       var title = 'Welcome!';
       var description = 'Hello nodejs';
       var list = template.list(filelist);
-      fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+      var filteredId = path.parse(queryData.id).base;
+      fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
         var title = queryData.id;
         var html = template.Html(title, list,
           `
@@ -212,7 +157,8 @@ var app = http.createServer(function (request, response) {
     request.on('end', function () {
       var post = qs.parse(body);
       var id = post.id;
-      fs.unlink(`data/${id}`, function(err){
+      var filteredId = path.parse(queryData.id).base;
+      fs.unlink(`data/${filteredId}`, function(err){
         response.writeHead(302, { Location: `/` });  // 페이지를 다른 곳으로 redirectoin
         response.end('success');
       })
